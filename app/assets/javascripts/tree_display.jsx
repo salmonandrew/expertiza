@@ -42,7 +42,8 @@ jQuery(document).ready(function() {
   var RowAction = React.createClass({
     getInitialState: function() {
       return {
-        showDetails: true
+        showDetails: true,
+        showModal: false
       }
     },
     handleButtonClick: function(e) {
@@ -54,6 +55,12 @@ jQuery(document).ready(function() {
           })
         }
       }
+    },
+    toggleModal: function(e) {
+      e.stopPropagation()
+      this.setState({
+        showDetails: !this.state.showDetails
+      })
     },
     render: function() {
       var moreContent = []
@@ -128,9 +135,9 @@ jQuery(document).ready(function() {
                 <a title="Assign survey" href={"/survey_deployment/new?id="+(parseInt(this.props.id)/2).toString()+"&type=CourseSurveyDeployment"}>
                   <img src="/assets/tree_view/assign-survey-24.png" />
                 </a>
-                <a title="View aggregated teammate & meta reviews" href={"/assessment360/all_students_all_reviews?course_id="+(parseInt(this.props.id)/2).toString()}>
+                <p title="View aggregated teammate & meta reviews" onClick={this.toggleModal}>
                   <span style={{"fontSize": "22px", "top": "8px"}} className="glyphicon glyphicon-list-alt"></span>
-                </a>
+                </p>
               </span>
             )
           }
