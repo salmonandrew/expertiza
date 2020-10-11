@@ -39,6 +39,10 @@ jQuery(document).ready(function() {
     jQuery( "#intelligent_assignment_dialog" ).dialog({ closeText: "hide", modal: true, resizable: false, width: 500 });
   }
 
+  if (document.getElementById('closeDialog')) {
+    document.getElementById('closeDialog').onclick = () => {jQuery('#dialog').dialog('close')};
+  }
+
   var RowAction = React.createClass({
     getInitialState: function() {
       return {
@@ -56,12 +60,18 @@ jQuery(document).ready(function() {
         }
       }
     },
-    toggleModal: function(e) {
-      e.stopPropagation()
+    toggleModal: function() {
       this.setState({
-        showDetails: !this.state.showDetails
-      })
+        showModal: !this.state.showModal
+      });
+        jQuery( "#dialog" ).dialog();
+        document.getElementById('course_id').value = parseInt(this.props.id/2).toString();
+        console.log("TOGGLE MODAL: ", this.state.showModal);
     },
+      closeDialog: function() {
+          jQuery(this).closest('.ui-dialog-content').dialog('close');
+
+      },
     render: function() {
       var moreContent = []
       var buttonContent = ""
@@ -135,9 +145,12 @@ jQuery(document).ready(function() {
                 <a title="Assign survey" href={"/survey_deployment/new?id="+(parseInt(this.props.id)/2).toString()+"&type=CourseSurveyDeployment"}>
                   <img src="/assets/tree_view/assign-survey-24.png" />
                 </a>
-                <p title="View aggregated teammate & meta reviews" onClick={this.toggleModal}>
+                <a title="View aggregated teammate & meta reviews" href={"/assessment360/all_students_all_reviews?course_id="+(parseInt(this.props.id)/2).toString()}>
                   <span style={{"fontSize": "22px", "top": "8px"}} className="glyphicon glyphicon-list-alt"></span>
-                </p>
+                </a>
+                <button title="View aggregated teammate & meta reviews" onClick={this.toggleModal}>
+                  <span style={{"fontSize": "22px", "top": "8px"}} className="glyphicon glyphicon-list-alt"></span>
+                </button>
               </span>
             )
           }
