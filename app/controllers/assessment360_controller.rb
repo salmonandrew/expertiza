@@ -11,7 +11,7 @@ class Assessment360Controller < ApplicationController
 
   # Find the list of all students and assignments pertaining to the course.
   # This data is used to compute the metareview and teammate review scores.
-  def all_students_all_reviews
+  def all_students_all_reviews(show_meta, show_teammate)
     course = Course.find(params[:course_id])
     @assignments = course.assignments.reject(&:is_calibrated).reject {|a| a.participants.empty? }
     @course_participants = course.get_participants
@@ -43,27 +43,31 @@ class Assessment360Controller < ApplicationController
         next if assignment_participant.nil?
         teammate_reviews = assignment_participant.teammate_reviews
         meta_reviews = assignment_participant.metareviews
-        populate_hash_for_all_students_all_reviews(assignment,
-                                                   cp,
-                                                   teammate_reviews,
-                                                   @teammate_review,
-                                                   @overall_teammate_review_grades,
-                                                   @overall_teammate_review_count,
-                                                   @teammate_review_info_per_stu)
-        populate_hash_for_all_students_all_reviews(assignment,
-                                                   cp,
-                                                   meta_reviews,
-                                                   @meta_review,
-                                                   @overall_meta_review_grades,
-                                                   @overall_meta_review_count,
-                                                   @meta_review_info_per_stu)
+        if show_teammate
+          populate_hash_for_all_students_all_reviews(assignment,
+            cp,
+            teammate_reviews,
+            @teammate_review,
+            @overall_teammate_review_grades,
+            @overall_teammate_review_count,
+            @teammate_review_info_per_stu)
+        end
+        if show_meta
+          populate_hash_for_all_students_all_reviews(assignment,
+            cp,
+            meta_reviews,
+            @meta_review,
+            @overall_meta_review_grades,
+            @overall_meta_review_count,
+            @meta_review_info_per_stu)
+        end
       end
       # calculate average grade for each student on all assignments in this course
-      if @teammate_review_info_per_stu[1] > 0
+      if show_teammate and @teammate_review_info_per_stu[1] > 0
         temp_avg_grade = @teammate_review_info_per_stu[0] * 1.0 / @teammate_review_info_per_stu[1]
         @teammate_review[cp.id][:avg_grade_for_assgt] = temp_avg_grade.round.to_s + '%'
       end
-      if @meta_review_info_per_stu[1] > 0
+      if show_meta and @meta_review_info_per_stu[1] > 0
         temp_avg_grade = @meta_review_info_per_stu[0] * 1.0 / @meta_review_info_per_stu[1]
         @meta_review[cp.id][:avg_grade_for_assgt] = temp_avg_grade.round.to_s + '%'
       end
