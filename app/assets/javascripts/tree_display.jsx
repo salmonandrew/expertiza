@@ -61,17 +61,9 @@ jQuery(document).ready(function() {
       }
     },
     toggleModal: function() {
-      this.setState({
-        showModal: !this.state.showModal
-      });
-        jQuery( "#dialog" ).dialog();
-        document.getElementById('course_id').value = parseInt(this.props.id/2).toString();
-        console.log("TOGGLE MODAL: ", this.state.showModal);
+      jQuery( "#dialog" ).dialog();
+      document.getElementById('course_id').value = parseInt(this.props.id/2).toString();
     },
-      closeDialog: function() {
-          jQuery(this).closest('.ui-dialog-content').dialog('close');
-
-      },
     render: function() {
       var moreContent = []
       var buttonContent = ""
