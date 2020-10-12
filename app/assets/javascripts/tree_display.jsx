@@ -43,7 +43,7 @@ jQuery(document).ready(function() {
     document.getElementById('closeDialog').onclick = () => {jQuery('#dialog').dialog('close')};
   }
   if (document.getElementById('closeCourseSummaryDialog')) {
-    document.getElementById('closeCourseSummaryDialog').onclick = () => {jQuery('#dialog').dialog('close')};
+    document.getElementById('closeCourseSummaryDialog').onclick = () => {jQuery('#dialog_course_summary').dialog('close')};
   }
 
   var RowAction = React.createClass({
