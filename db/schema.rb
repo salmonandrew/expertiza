@@ -50,7 +50,6 @@ ActiveRecord::Schema.define(version: 20200812211018) do
 # Could not dump table "assignment_questionnaires" because of following FrozenError
 #   can't modify frozen String: "true"
 
-<<<<<<< Updated upstream
   create_table "assignments", force: :cascade do |t|
     t.datetime "created_at"
     t.datetime "updated_at"
@@ -109,10 +108,6 @@ ActiveRecord::Schema.define(version: 20200812211018) do
   add_index "assignments", ["instructor_id"], name: "fk_assignments_instructors", using: :btree
   add_index "assignments", ["late_policy_id"], name: "fk_late_policy_id", using: :btree
   add_index "assignments", ["sample_assignment_id"], name: "fk_rails_b01b82a1a2", using: :btree
-=======
-# Could not dump table "assignments" because of following FrozenError
-#   can't modify frozen String: "false"
->>>>>>> Stashed changes
 
   create_table "automated_metareviews", force: :cascade do |t|
     t.float    "relevance",         limit: 24
@@ -370,7 +365,6 @@ ActiveRecord::Schema.define(version: 20200812211018) do
 # Could not dump table "questionnaires" because of following FrozenError
 #   can't modify frozen String: "false"
 
-<<<<<<< Updated upstream
   create_table "questions", force: :cascade do |t|
     t.text    "txt",              limit: 65535
     t.integer "weight",           limit: 4
@@ -383,10 +377,6 @@ ActiveRecord::Schema.define(version: 20200812211018) do
     t.string  "max_label",        limit: 255,                           default: ""
     t.string  "min_label",        limit: 255,                           default: ""
   end
-=======
-# Could not dump table "questions" because of following FrozenError
-#   can't modify frozen String: "true"
->>>>>>> Stashed changes
 
 # Could not dump table "quiz_question_choices" because of following FrozenError
 #   can't modify frozen String: "false"
