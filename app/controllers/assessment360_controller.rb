@@ -13,6 +13,17 @@ class Assessment360Controller < ApplicationController
   # This data is used to compute the metareview and teammate review scores.
   def all_students_all_reviews
     course = Course.find(params[:course_id])
+    fields = params[:fields]
+    @show_meta_reviews = fields.include? 'MetaReviewScores'
+    @show_teammate_reviews = fields.include? 'TeammateReviewScores'
+    @show_teammate_count = fields.include? 'NumberOfTeammates'
+    @colspan_count = 2
+    if !@show_teammate_reviews
+      @colspan_count -= 1
+    end
+    if !@show_meta_reviews
+      @colspan_count -= 1
+    end
     @assignments = course.assignments.reject(&:is_calibrated).reject {|a| a.participants.empty? }
     @course_participants = course.get_participants
     if @course_participants.empty?
