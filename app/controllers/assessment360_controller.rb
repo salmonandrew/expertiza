@@ -13,6 +13,8 @@ class Assessment360Controller < ApplicationController
   # This data is used to compute the metareview and teammate review scores.
   def all_students_all_reviews
     course = Course.find(params[:course_id])
+    show_meta = params[:show_meta]
+    show_teammate = params[:show_teammate]
     @assignments = course.assignments.reject(&:is_calibrated).reject {|a| a.participants.empty? }
     @course_participants = course.get_participants
     if @course_participants.empty?
@@ -22,7 +24,7 @@ class Assessment360Controller < ApplicationController
     # hashes for view
     @meta_review = {}
     @teammate_review = {}
-    @teamed_count = {}
+    @total_unique_teamates = {}
     # for course
     # eg. @overall_teammate_review_grades = {assgt_id1: 100, assgt_id2: 178, ...}
     # @overall_teammate_review_count = {assgt_id1: 1, assgt_id2: 2, ...}
@@ -35,7 +37,7 @@ class Assessment360Controller < ApplicationController
       # [aggregrate_review_grades_per_stu, review_count_per_stu] --> [0, 0]
       %w[teammate meta].each {|type| instance_variable_set("@#{type}_review_info_per_stu", [0, 0]) }
       students_teamed = StudentTask.teamed_students(cp.user)
-      @teamed_count[cp.id] = students_teamed[course.id].try(:size).to_i
+      @total_unique_teamates[cp.id] = students_teamed[course.id].try(:size).to_i
       @assignments.each do |assignment|
         @meta_review[cp.id] = {} unless @meta_review.key?(cp.id)
         @teammate_review[cp.id] = {} unless @teammate_review.key?(cp.id)
@@ -43,27 +45,31 @@ class Assessment360Controller < ApplicationController
         next if assignment_participant.nil?
         teammate_reviews = assignment_participant.teammate_reviews
         meta_reviews = assignment_participant.metareviews
-        populate_hash_for_all_students_all_reviews(assignment,
-                                                   cp,
-                                                   teammate_reviews,
-                                                   @teammate_review,
-                                                   @overall_teammate_review_grades,
-                                                   @overall_teammate_review_count,
-                                                   @teammate_review_info_per_stu)
-        populate_hash_for_all_students_all_reviews(assignment,
-                                                   cp,
-                                                   meta_reviews,
-                                                   @meta_review,
-                                                   @overall_meta_review_grades,
-                                                   @overall_meta_review_count,
-                                                   @meta_review_info_per_stu)
+        if show_teammate
+          populate_hash_for_all_students_all_reviews(assignment,
+            cp,
+            teammate_reviews,
+            @teammate_review,
+            @overall_teammate_review_grades,
+            @overall_teammate_review_count,
+            @teammate_review_info_per_stu)
+        end
+        if show_meta
+          populate_hash_for_all_students_all_reviews(assignment,
+            cp,
+            meta_reviews,
+            @meta_review,
+            @overall_meta_review_grades,
+            @overall_meta_review_count,
+            @meta_review_info_per_stu)
+        end
       end
       # calculate average grade for each student on all assignments in this course
-      if @teammate_review_info_per_stu[1] > 0
+      if show_teammate and @teammate_review_info_per_stu[1] > 0
         temp_avg_grade = @teammate_review_info_per_stu[0] * 1.0 / @teammate_review_info_per_stu[1]
         @teammate_review[cp.id][:avg_grade_for_assgt] = temp_avg_grade.round.to_s + '%'
       end
-      if @meta_review_info_per_stu[1] > 0
+      if show_meta and @meta_review_info_per_stu[1] > 0
         temp_avg_grade = @meta_review_info_per_stu[0] * 1.0 / @meta_review_info_per_stu[1]
         @meta_review[cp.id][:avg_grade_for_assgt] = temp_avg_grade.round.to_s + '%'
       end
@@ -86,6 +92,8 @@ class Assessment360Controller < ApplicationController
     @assignment_grades = {}
     @peer_review_scores = {}
     @final_grades = {}
+    @average_peer_review_score = {}
+    
 
     course = Course.find(params[:course_id])
     @assignments = course.assignments.reject(&:is_calibrated).reject {|a| a.participants.empty? }
@@ -98,9 +106,10 @@ class Assessment360Controller < ApplicationController
     @course_participants.each do |cp|
       @topics[cp.id] = {}
       @assignment_grades[cp.id] = {}
-      @peer_review_scores[cp.id] = {}
+      @peer_review_scores[cp.id] = {} 
       @final_grades[cp.id] = 0
-
+      @average_peer_review_score[cp.id] = 0 
+      
       @assignments.each do |assignment|
         user_id = cp.user_id
         assignment_id = assignment.id
@@ -119,6 +128,11 @@ class Assessment360Controller < ApplicationController
         team = Team.find(team_id)
         peer_review_score = find_peer_review_score(user_id, assignment_id)
 
+        # Set the average peer review score, peer review score, and sum for the final peer review summary
+        unless peer_review_score.nil? ||  peer_review_score[:total_score].nil?
+          @average_peer_review_score[cp.id] += peer_review_score[:total_score].round(2)
+        end
+        
         # Set the assignment grade, peer review score, and sum for the final student summary
         @assignment_grades[cp.id][assignment_id] = team[:grade_for_submission]
         unless @assignment_grades[cp.id][assignment_id].nil?
@@ -129,6 +143,7 @@ class Assessment360Controller < ApplicationController
           @peer_review_scores[cp.id][assignment_id] = peer_review_score[:review][:scores][:avg].round(2)
         end
       end
+      @average_peer_review_score[cp.id] = (@average_peer_review_score[cp.id] / @assignments.count()).round(2)
     end
   end
 
@@ -142,10 +157,12 @@ class Assessment360Controller < ApplicationController
     overall_review_grade_hash[assignment.id] = 0 unless overall_review_grade_hash.key?(assignment.id)
     overall_review_count_hash[assignment.id] = 0 unless overall_review_count_hash.key?(assignment.id)
     grades = 0
+    
     if reviews.count > 0
       reviews.each {|review| grades += review.average_score.to_i }
       avg_grades = (grades * 1.0 / reviews.count).round
       hash_per_stu[course_participant.id][assignment.id] = avg_grades.to_s + '%'
+      
     end
     if avg_grades and grades > 0
       # for each assignment
@@ -164,14 +181,15 @@ class Assessment360Controller < ApplicationController
     questions = retrieve_questions assignment.questionnaires, assignment_id
 
     participant.scores(questions)
+    # puts participant.scores(questions)[:scores].to_s
   end
 
   def format_topic(topic)
-    topic.nil? ? '-' : topic.format_for_display
+    topic.nil? ? '–' : topic.format_for_display
   end
 
   def format_score(score)
-    score.nil? ? '-' : score
+    score.nil? ? '–' : score
   end
 
   helper_method :format_score
