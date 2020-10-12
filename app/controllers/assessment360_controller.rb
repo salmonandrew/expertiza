@@ -13,8 +13,6 @@ class Assessment360Controller < ApplicationController
   # This data is used to compute the metareview and teammate review scores.
   def all_students_all_reviews
     course = Course.find(params[:course_id])
-    show_meta = params[:show_meta]
-    show_teammate = params[:show_teammate]
     @assignments = course.assignments.reject(&:is_calibrated).reject {|a| a.participants.empty? }
     @course_participants = course.get_participants
     if @course_participants.empty?
@@ -45,31 +43,27 @@ class Assessment360Controller < ApplicationController
         next if assignment_participant.nil?
         teammate_reviews = assignment_participant.teammate_reviews
         meta_reviews = assignment_participant.metareviews
-        if show_teammate
-          populate_hash_for_all_students_all_reviews(assignment,
+        populate_hash_for_all_students_all_reviews(assignment,
             cp,
             teammate_reviews,
             @teammate_review,
             @overall_teammate_review_grades,
             @overall_teammate_review_count,
             @teammate_review_info_per_stu)
-        end
-        if show_meta
-          populate_hash_for_all_students_all_reviews(assignment,
+        populate_hash_for_all_students_all_reviews(assignment,
             cp,
             meta_reviews,
             @meta_review,
             @overall_meta_review_grades,
             @overall_meta_review_count,
             @meta_review_info_per_stu)
-        end
       end
       # calculate average grade for each student on all assignments in this course
-      if show_teammate and @teammate_review_info_per_stu[1] > 0
+      if @teammate_review_info_per_stu[1] > 0
         temp_avg_grade = @teammate_review_info_per_stu[0] * 1.0 / @teammate_review_info_per_stu[1]
         @teammate_review[cp.id][:avg_grade_for_assgt] = temp_avg_grade.round.to_s + '%'
       end
-      if show_meta and @meta_review_info_per_stu[1] > 0
+      if @meta_review_info_per_stu[1] > 0
         temp_avg_grade = @meta_review_info_per_stu[0] * 1.0 / @meta_review_info_per_stu[1]
         @meta_review[cp.id][:avg_grade_for_assgt] = temp_avg_grade.round.to_s + '%'
       end
