@@ -101,6 +101,16 @@ class Assessment360Controller < ApplicationController
     
 
     course = Course.find(params[:course_id])
+    fields = params[:fields]
+    @show_instructor_scores = fields.include? 'InstructorAssignedScores'
+    @show_peer_grades = fields.include? 'PeerGrades'
+    @show_topics = fields.include? 'Topics'
+    puts '*******'
+    puts @show_instructor_scores
+    puts @show_peer_grades
+    puts @show_topics
+
+
     @assignments = course.assignments.reject(&:is_calibrated).reject {|a| a.participants.empty? }
     @course_participants = course.get_participants
     if @course_participants.empty?
